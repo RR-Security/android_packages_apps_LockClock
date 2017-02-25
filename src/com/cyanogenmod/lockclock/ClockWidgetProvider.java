@@ -24,11 +24,12 @@ import android.net.ConnectivityManager;
 import android.util.Log;
 
 import com.cyanogenmod.lockclock.misc.Constants;
+import com.cyanogenmod.lockclock.misc.Preferences;
 import com.cyanogenmod.lockclock.misc.WidgetUtils;
 import com.cyanogenmod.lockclock.weather.ForecastActivity;
+import com.cyanogenmod.lockclock.weather.Utils;
+import com.cyanogenmod.lockclock.weather.WeatherSourceListenerService;
 import com.cyanogenmod.lockclock.weather.WeatherUpdateService;
-import com.cyanogenmod.lockclock.ClockWidgetService;
-import com.cyanogenmod.lockclock.WidgetApplication;
 
 public class ClockWidgetProvider extends AppWidgetProvider {
     private static final String TAG = "ClockWidgetProvider";
@@ -49,7 +50,8 @@ public class ClockWidgetProvider extends AppWidgetProvider {
         if (D) Log.v(TAG, "Received intent " + intent);
 
         // Network connection has changed, make sure the weather update service knows about it
-        if (ConnectivityManager.CONNECTIVITY_ACTION.equals(action)) {
+        if (ConnectivityManager.CONNECTIVITY_ACTION.equals(action)
+                && Utils.isWeatherServiceAvailable(context)) {
             boolean hasConnection =
                     !intent.getBooleanExtra(ConnectivityManager.EXTRA_NO_CONNECTIVITY, false);
 
@@ -64,10 +66,9 @@ public class ClockWidgetProvider extends AppWidgetProvider {
 
         // Boot completed, schedule next weather update
         } else if (Intent.ACTION_BOOT_COMPLETED.equals(action)) {
-            // On first boot lastUpdate will be 0 thus no need to force an update
-            // Subsequent boots will use cached data
-            WeatherUpdateService.scheduleNextUpdate(context, false);
-
+            //Since we're using elapsed time since boot, we can't use the timestamp from the
+            //previous boot so we need to reset the timer
+            Preferences.setLastWeatherUpadteTimestamp(context, 0);
         // A widget has been deleted, prevent our handling and ask the super class handle it
         } else if (AppWidgetManager.ACTION_APPWIDGET_DELETED.equals(action)
                 || AppWidgetManager.ACTION_APPWIDGET_DISABLED.equals(action)) {
@@ -124,7 +125,10 @@ public class ClockWidgetProvider extends AppWidgetProvider {
     @Override
     public void onEnabled(Context context) {
         if (D) Log.d(TAG, "Scheduling next weather update");
-        WeatherUpdateService.scheduleNextUpdate(context, true);
+        if (Utils.isWeatherServiceAvailable(context)) {
+            context.startService(new Intent(context, WeatherSourceListenerService.class));
+            WeatherUpdateService.scheduleNextUpdate(context, true);
+        }
 
         // Start the broadcast receiver (API 16 devices)
         // This will schedule a repeating alarm every minute to handle the clock refresh
@@ -138,8 +142,11 @@ public class ClockWidgetProvider extends AppWidgetProvider {
     @Override
     public void onDisabled(Context context) {
         if (D) Log.d(TAG, "Cleaning up: Clearing all pending alarms");
-        ClockWidgetService.cancelUpdates(context);
-        WeatherUpdateService.cancelUpdates(context);
+        if (Utils.isWeatherServiceAvailable(context)) {
+            context.stopService(new Intent(context, WeatherSourceListenerService.class));
+            ClockWidgetService.cancelUpdates(context);
+            WeatherUpdateService.cancelUpdates(context);
+        }
 
         // Stop the clock update event (API 16 devices)
         if (!WidgetUtils.isTextClockAvailable()) {

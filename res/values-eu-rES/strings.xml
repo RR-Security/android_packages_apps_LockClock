@@ -100,6 +100,8 @@
   <string name="weather_refreshing">Berritzen\u2026</string>
   <string name="weather_last_sync_just_now">Orain</string>
   <string name="weather_cannot_reach_provider">Momentu honetan ezinezkoa da %s -ra sartzea</string>
+  <string name="weather_source_not_selected">Ez da eguraldi iturririk aukeratu</string>
+  <string name="weather_tap_to_select_source">Sakatu bat hautatzeko</string>
   <!-- Weather - Update frequency -->
   <string name="weather_refresh_manual">Eskuz</string>
   <string name="weather_refresh_30min">30 minutu</string>
@@ -127,7 +129,6 @@
   <string name="weather_enabled">Gaituta</string>
   <string name="weather_enable">Erakutsi eguraldia</string>
   <string name="weather_source_title">Eguraldiaren jatorria</string>
-  <string name="weather_source_yahoo">Yahoo! Eguraldia</string>
   <string name="weather_use_custom_location">Erabili kokaleku pertsonalizatua</string>
   <string name="weather_geolocated">Sare bidezko geo-kokapena</string>
   <string name="weather_custom_location_dialog_title">Sartu kokalekua</string>
