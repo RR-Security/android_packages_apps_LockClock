@@ -253,11 +253,6 @@ public class Preferences {
         }
     }
 
-<<<<<<< HEAD
-    public static WeatherProvider weatherProvider(Context context) {
-        return new OpenWeatherMapProvider(context);
-    }
-
     private static WeatherLocation JSONToWeatherLocation(JSONObject jsonObject)
             throws JSONException {
         String cityId;
